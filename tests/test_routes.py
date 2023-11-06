@@ -13,11 +13,11 @@ class TestRoutes(TestCase):
 
     @classmethod
     def setUpTestData(cls):
-        cls.author = User.objects.create(username='Автор')
+        cls.author = User.objects.create(username='Автор заметки')
         cls.user = User.objects.create(username='Мимо Крокодил')
         cls.auth_client = Client()
         cls.auth_client.force_login(cls.user)
-        cls.notes = Note.objects.create(
+        cls.note = Note.objects.create(
             title='Заголовок',
             text='Текст',
             author=cls.author,
@@ -52,7 +52,7 @@ class TestRoutes(TestCase):
             self.client.force_login(user)
             for name in urls:
                 with self.subTest(user=user, name=name):
-                    url = reverse(name, args=(self.notes.slug,))
+                    url = reverse(name, args=(self.note.slug,))
                     response = self.client.get(url)
                     self.assertEqual(response.status_code, status)
 
@@ -76,9 +76,9 @@ class TestRoutes(TestCase):
             ('notes:list', None),
             ('notes:success', None),
             ('notes:add', None),
-            ('notes:detail', (self.notes.slug,)),
-            ('notes:edit', (self.notes.slug,)),
-            ('notes:delete', (self.notes.slug,)),
+            ('notes:detail', (self.note.slug,)),
+            ('notes:edit', (self.note.slug,)),
+            ('notes:delete', (self.note.slug,)),
         )
         for name, args in urls:
             with self.subTest(name=name):
