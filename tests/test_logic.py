@@ -30,6 +30,7 @@ class TestNoteCreation(TestCase):
             'title': cls.NOTE_TITLE,
             'text': cls.NOTE_TEXT,
             'slug': cls.NOTE_SLUG,
+            'author': cls.author
         }
 
     def test_user_can_create_note(self):
@@ -37,10 +38,11 @@ class TestNoteCreation(TestCase):
         response = self.reader_client.post(self.add_url, self.form_data)
         self.assertRedirects(response, self.success_url)
         self.assertEqual(Note.objects.count(), 1)
-        new_note = Note.objects.get()
+        new_note = Note.objects.last()
         self.assertEqual(new_note.title, self.form_data['title'])
         self.assertEqual(new_note.text, self.form_data['text'])
         self.assertEqual(new_note.slug, self.form_data['slug'])
+        self.assertEqual(new_note.author, self.form_data['author'])
 
     def test_anonymous_user_cant_create_note(self):
         """Тест создания заметки анонимом"""
@@ -56,10 +58,9 @@ class TestNoteCreation(TestCase):
         response = self.author_client.post(self.add_url, self.form_data)
         self.assertRedirects(response, self.success_url)
         self.assertEqual(Note.objects.count(), 1)
-        new_note = Note.objects.get()
+        new_note = Note.objects.last()
         expected_slug = slugify(self.form_data['title'])
         self.assertEqual(new_note.slug, expected_slug)
-
 
 
 class TestNoteEditDelete(TestCase):
@@ -116,17 +117,21 @@ class TestNoteEditDelete(TestCase):
         self.assertEqual(self.note.title, self.NEW_NOTE_TITLE)
         self.assertEqual(self.note.text, self.NEW_NOTE_TEXT)
         self.assertEqual(self.note.slug, self.NEW_NOTE_SLUG)
+        self.assertEqual(self.note.author, self.author)
 
     def test_user_cant_edit_note_of_another_user(self):
         """Тест редактирования заметки читателем"""
         response = self.reader_client.post(self.edit_url, self.form_data)
         self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
         self.note.refresh_from_db()
+        self.assertEqual(self.note.title, self.NOTE_TITLE)
         self.assertEqual(self.note.text, self.NOTE_TEXT)
+        self.assertEqual(self.note.author, self.author)
 
     def test_not_unique_slug(self):
         """Тест уникальности слага заметки"""
         self.form_data['slug'] = self.note.slug
         response = self.author_client.post(self.add_url, self.form_data)
-        self.assertFormError(response, 'form', 'slug', errors=(self.note.slug + WARNING))
+        self.assertFormError(response, 'form', 'slug',
+                             errors=(self.note.slug + WARNING))
         self.assertEqual(Note.objects.count(), 1)

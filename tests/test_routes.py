@@ -14,6 +14,8 @@ class TestRoutes(TestCase):
     @classmethod
     def setUpTestData(cls):
         cls.author = User.objects.create(username='Автор заметки')
+        cls.author_client = Client()
+        cls.author_client.force_login(cls.author)
         cls.user = User.objects.create(username='Мимо Крокодил')
         cls.auth_client = Client()
         cls.auth_client.force_login(cls.user)
@@ -45,11 +47,10 @@ class TestRoutes(TestCase):
             ('notes:delete'),
         )
         users_statuses = (
-            (self.author, HTTPStatus.OK),
-            (self.user, HTTPStatus.NOT_FOUND),
+            (self.author_client, HTTPStatus.OK),
+            (self.auth_client, HTTPStatus.NOT_FOUND),
         )
         for user, status in users_statuses:
-            self.client.force_login(user)
             for name in urls:
                 with self.subTest(user=user, name=name):
                     url = reverse(name, args=(self.note.slug,))

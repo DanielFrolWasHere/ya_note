@@ -2,6 +2,7 @@ from django.contrib.auth import get_user_model
 from django.test import Client, TestCase
 from django.urls import reverse
 
+from notes.forms import NoteForm
 from notes.models import Note
 
 User = get_user_model()
@@ -45,8 +46,10 @@ class TestNoteEditDelete(TestCase):
         """Тест отображения формы на странице создания"""
         response = self.author_client.get(self.add_url)
         self.assertIn('form', response.context)
+        self.assertIsInstance(response.context['form'], NoteForm)
 
     def test_edit_note_page_contains_form(self):
         """Тест отображения формы на странице редактирования"""
         response = self.author_client.get(self.edit_url)
         self.assertIn('form', response.context)
+        self.assertIsInstance(response.context['form'], NoteForm)
