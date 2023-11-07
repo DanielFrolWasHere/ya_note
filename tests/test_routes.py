@@ -16,9 +16,9 @@ class TestRoutes(TestCase):
         cls.author = User.objects.create(username='Автор заметки')
         cls.author_client = Client()
         cls.author_client.force_login(cls.author)
-        cls.user = User.objects.create(username='Мимо Крокодил')
-        cls.auth_client = Client()
-        cls.auth_client.force_login(cls.user)
+        cls.reader = User.objects.create(username='Читатель')
+        cls.reader_client = Client()
+        cls.reader_client.force_login(cls.reader)
         cls.note = Note.objects.create(
             title='Заголовок',
             text='Текст',
@@ -48,13 +48,13 @@ class TestRoutes(TestCase):
         )
         users_statuses = (
             (self.author_client, HTTPStatus.OK),
-            (self.auth_client, HTTPStatus.NOT_FOUND),
+            (self.reader_client, HTTPStatus.NOT_FOUND),
         )
         for user, status in users_statuses:
             for name in urls:
                 with self.subTest(user=user, name=name):
                     url = reverse(name, args=(self.note.slug,))
-                    response = self.client.get(url)
+                    response = user.get(url)
                     self.assertEqual(response.status_code, status)
 
     def test_availability_for_notes_list_success_add(self):
@@ -67,7 +67,7 @@ class TestRoutes(TestCase):
         for name, args in urls:
             with self.subTest(name=name):
                 url = reverse(name, args=args)
-                response = self.auth_client.get(url)
+                response = self.reader_client.get(url)
                 self.assertEqual(response.status_code, HTTPStatus.OK)
 
     def test_redirect_for_anonymous_client(self):

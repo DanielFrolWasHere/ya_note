@@ -21,28 +21,27 @@ class TestNoteCreation(TestCase):
         cls.author = User.objects.create(username='Автор заметки')
         cls.author_client = Client()
         cls.author_client.force_login(cls.author)
-        cls.reader = User.objects.create(username='Читатель')
-        cls.reader_client = Client()
-        cls.reader_client.force_login(cls.reader)
+        cls.user = User.objects.create(username='Читатель')
+        cls.auth_client = Client()
+        cls.auth_client.force_login(cls.user)
         cls.add_url = reverse('notes:add')
         cls.success_url = reverse('notes:success')
         cls.form_data = {
             'title': cls.NOTE_TITLE,
             'text': cls.NOTE_TEXT,
             'slug': cls.NOTE_SLUG,
-            'author': cls.author
         }
 
     def test_user_can_create_note(self):
         """Тест создания заметки авторизованным пользователем"""
-        response = self.reader_client.post(self.add_url, self.form_data)
+        response = self.auth_client.post(self.add_url, self.form_data)
         self.assertRedirects(response, self.success_url)
         self.assertEqual(Note.objects.count(), 1)
         new_note = Note.objects.last()
         self.assertEqual(new_note.title, self.form_data['title'])
         self.assertEqual(new_note.text, self.form_data['text'])
         self.assertEqual(new_note.slug, self.form_data['slug'])
-        self.assertEqual(new_note.author, self.form_data['author'])
+        self.assertEqual(new_note.author, self.user)
 
     def test_anonymous_user_cant_create_note(self):
         """Тест создания заметки анонимом"""
